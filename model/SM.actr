@@ -1,0 +1,283 @@
+(set-task "sm.task.SM")
+
+(sgp
+    :esc t
+    :emma t
+    ;;:bll 0.5
+    :rt 1
+    :ans 0.5
+    :v t
+    
+    :visual-num-finsts 20
+    :visual-finst-span 10
+)
+
+(add-dm
+    (goal isa scan)
+)
+(goal-focus goal)
+
+;;(set-visual-frequency "AA470" .000001)
+
+
+(start-hand-at-mouse)
+
+;;;
+;;; Scan
+;;;
+
+(p scan*find-object
+    =goal>
+        isa scan
+    ?visual-location>
+        state free
+        - buffer requested
+    ?visual>
+        state free
+        buffer empty
+==>
+    +visual-location>
+        isa visual-location
+        kind object
+        < screen-y 700
+        :attended nil
+)
+
+(p scan*encode-object
+    =goal>
+        isa scan
+    =visual-location>
+        isa visual-location
+    ?visual>
+        buffer empty
+        state free
+==>
+    +visual>
+        isa move-attention
+        screen-pos =visual-location
+)
+
+(p scan*remember-object
+    =goal>
+        isa scan
+    =visual>
+        isa object
+        screen-pos =pos
+        value =value
+==>
+    !output! (=value)
+    +imaginal>
+        isa object
+        properties =value
+        location =pos
+    -imaginal>
+    =goal>
+        isa scan
+)
+
+(p scan*no-more-objects->look-for-button
+    =goal>
+        isa scan
+    ?visual-location>
+        state error
+==>
+    +goal>
+        isa move-mouse-start-recall
+    +visual-location>
+        isa visual-location
+        kind oval
+        > screen-y 700
+    -visual>
+)
+
+(p scan*found-a-button->move-to-it-no-manual
+    =goal>
+        isa move-mouse-start-recall
+    =visual-location>
+        isa visual-location
+    ?visual>
+        state free
+    ?manual>
+        state   free
+==>
+    =goal>
+        isa click-mouse-start-recall
+    =visual-location>
+    +visual>
+        isa move-attention
+        screen-pos =visual-location
+    +manual>
+        isa move-cursor
+        loc =visual-location
+)
+(p scan*click-mouse->go-to-recall
+    =goal>
+        isa click-mouse-start-recall
+    ?manual>
+        state free
+==>
+    -retrieval>
+    +goal>
+        isa recall
+    +manual>
+        isa click-mouse
+)
+
+;;===========================
+
+#|
+(p scan*no-more-objects->look-for-targets
+    =goal>
+        isa scann
+    ?visual-location>
+        state error
+==>
+    +goal>
+        isa recall
+    +visual-location>
+        isa visual-location
+        kind objectsw
+        > screen-y 700 
+    -visual>
+)
+|#
+
+;;;
+;;; Recall
+;;;
+
+
+(p recall*found-target-location->move-to-it
+    =goal>
+        isa recall
+    =visual-location>
+        isa visual-location
+    ?visual>
+        state free
+    ?manual>
+        state free
+==>
+    +visual>
+        isa move-attention
+        screen-pos =visual-location
+    +manual>
+        isa move-cursor
+        loc =visual-location
+    +goal>
+        isa click-mouse
+)
+
+
+(p recall*found-target-location->click-mouse
+    =goal>
+        isa click-mouse
+    ?manual>
+        state free
+    =visual>
+        isa object
+        value =value
+==>
+    !output! (=value)
+    +imaginal>
+        properties =value
+    -retrieval>
+    +goal>
+        isa recall
+    +manual>
+        isa click-mouse
+)
+
+
+(p recall*found-target-object->recall-object-location
+    =goal>
+        isa recall
+    =imaginal>
+        properties =value
+    ?retrieval>
+        state free
+        buffer empty
+==>
+    +retrieval>
+        isa object
+        properties =value
+)     
+
+(p recall*recalled
+    =goal>
+        isa recall
+    =retrieval>
+        isa object
+        properties =value
+        location =loc
+    ?visual>
+        buffer empty
+        state   free
+    ?manual>
+        state   free
+==>
+    +goal>
+        isa click-mouse
+    +visual>
+        isa move-attention
+        screen-pos =loc
+    +manual>
+        isa move-cursor
+        loc =loc
+)
+
+(p recall*failed
+    =goal>
+        isa recall
+    ?retrieval>
+        state error
+==>
+    -retrieval>
+    +goal>
+        isa click-mouse
+        ;;+visual-location>
+        ;;isa visual-location
+        ;;>= screen-x 200
+        ;;<= screen-x 225
+)
+
+(p recall*switch-to-scan
+    =goal>
+        isa recall
+    ?visual-location>
+        state free
+        buffer unrequested
+==>
+    +goal>
+        isa scan
+    -aural-location>
+    -aural>
+)
+
+
+(p recall*click-mouse->back-to-scan
+    =goal>
+        isa click-mouse-when-done
+    ?manual>
+        state free
+==>
+    -retrieval>
+    +goal>
+        isa recall
+    +manual>
+        isa click-mouse
+)
+
+(p recall*click-mouse
+    =goal>
+        isa click-mouse
+    ?manual>
+        state free
+==>
+    -retrieval>
+    +goal>
+        isa recall
+    +manual>
+        isa click-mouse
+)
+
+
