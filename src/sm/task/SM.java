@@ -10,16 +10,20 @@ import java.util.Random;
 import java.util.Vector;
 
 import actr.model.Event;
+import actr.model.Symbol;
 import actr.task.Result;
 import actr.task.Task;
 import actr.task.TaskButton;
+import actr.task.TaskCross;
 import sm.task.VisualObject.Colour;
 import sm.task.VisualObject.Hieght;
 import sm.task.VisualObject.Pattern;
 import sm.task.VisualObject.Shape;
 
 public class SM extends Task {
-	
+	public enum Phase {
+		scan, recall
+	};
 	private final static int DISPLAY_WIDTH = 800;
 	private final static int DISPLAY_HEIGHT = 800;
 	private final static int X_CENTER = DISPLAY_WIDTH / 2 - 10 ;
@@ -27,8 +31,9 @@ public class SM extends Task {
 	private final static int INNER_RADIUS = 110;
 	private final static int OUTER_RADIUS = 220;
 	private final static int OFFSET = 40;
-	
+	private final static double[] DELAY_TIME = new double[]{0.5,1.0,1.5};
 	private final int NUMBER_OF_TRIALS = 60;
+	
 	
 	private static final Point[] LOC_ARRAY = new Point[] {
 			new Point(X_CENTER, Y_CENTER-INNER_RADIUS-OFFSET),
@@ -50,29 +55,46 @@ public class SM extends Task {
 			new Point(X_CENTER-OUTER_RADIUS+OFFSET , Y_CENTER-OUTER_RADIUS+OFFSET),
 	};
 	
+	private Phase phase= Phase.scan;
 	private int trial = 0;
 	private List<VisualObject> visualObjects = new Vector<VisualObject>();
 	private int numberOfObjects = 0;
 	private TaskButton doneButton;
 	
-	private VisualObject pickedObject;
+	private VisualObject pickedObject = null;
 	
 	//private int askedPlane = 0;
 	private int[] responses = new int[NUMBER_OF_TRIALS];
 	private double[] errors = new double[NUMBER_OF_TRIALS];
 
+	private Random random = new Random();
+	
 	public SM() {
 		super();
 		setBackground(Color.gray);
 		doneButton = new TaskButton("DONE", DISPLAY_WIDTH-100, DISPLAY_HEIGHT - 50, 80,40 ){
 			@Override
 			public void doClick() {
-				System.out.println("recallphase");
-				recallPhase();
+				switch (phase) {
+				case scan:
+					addEvent(new Event(DELAY_TIME[random.nextInt(3)], "task", "update") {
+						@Override
+						public void action() {
+							recallPhase();
+						}
+					});
+					
+					break;
+				case recall:
+					scanPhase();
+					break;
+				default:
+					break;
+				}
 			}
 		};
 		add(doneButton);
-		
+		add(new TaskCross(X_CENTER, Y_CENTER, 5));
 	}
 
 	@Override
@@ -86,15 +108,18 @@ public class SM extends Task {
 		});
 	}
 
-	private Random random = new Random();
-
 	private void scanPhase() {
 		trial++;
 		if (trial > NUMBER_OF_TRIALS){
 			stopModel();	
 		}
+		if (visualObjects.size() > 0)
+			for (VisualObject v : visualObjects)
+				remove(v);
+		visualObjects.clear();
 		
-		//removeAll();
+		phase =Phase.scan;
+
 		numberOfObjects = random.nextInt(4)+2;
 	
 		// making unique random number for the picking up the locations of the shapes
@@ -115,7 +140,7 @@ public class SM extends Task {
         	randomColour = Colour.values()[random.nextInt(Colour.values().length)];
         	randomHoieght = Hieght.values()[random.nextInt(Hieght.values().length)];
         	randomPattern = Pattern.values()[random.nextInt(Pattern.values().length)];
-        	VisualObject a = new VisualObject(LOC_ARRAY[listOfRandomIndexes.get(i)], randomShape, randomColour, randomHoieght, randomPattern);
+        	VisualObject a = new VisualObject(this,LOC_ARRAY[listOfRandomIndexes.get(i)], LOC_ARRAY[listOfRandomIndexes.get(i)], randomShape, randomColour, randomHoieght, randomPattern);
     		visualObjects.add(a);
 		}
         
@@ -125,61 +150,25 @@ public class SM extends Task {
 		processDisplay();
 		repaint();
 
-//		double timeDelta = 0.7 * numberOfObjects;
-//		addEvent(new Event(getModel().getTime() + timeDelta, "task", "update") {
-//			@Override
-//			public void action() {
-//				removeAll();
-//				for (int i = 0; i < visualObjects.size(); i++) {
-//					VisualObject v = visualObjects.get(i);
-//		        	add(new VisualObject ( new Point(100*(i+1), 750) , v.getShape(), v.getColour(), v.getHieght(), v.getPattern()){
-//		        		public void mouseReleased(java.awt.event.MouseEvent evt) {
-//		        			pickedObject = v;
-//		                    System.out.println("mouseReleased " + v.getValue());
-//		                }
-//		        	});
-//				}
-//				add(doneButton);
-//				processDisplay();
-//				repaint();
-//				
-//				
-//				
-//				
-//			}
-//		});
+		getModel().getDeclarative().get(Symbol.get("goal")).set(Symbol.get("isa"),
+				Symbol.get("scan"));
 	}
 
-	protected void recallPhase() {
-		removeAll();
+	private void recallPhase() {
+		
+		phase = Phase.recall;
 		for (int i = 0; i < visualObjects.size(); i++) {
-			VisualObject v = visualObjects.get(i);
-        	add(new VisualObject ( new Point(100*(i+1), 750) , v.getShape(), v.getColour(), v.getHieght(), v.getPattern()){
-        		public void mouseReleased(java.awt.event.MouseEvent evt) {
-        			pickedObject = v;
-                    System.out.println("mouseReleased " + v.getValue());
-                }
-        	});
+			visualObjects.get(i).moveTo(new Point(100*(i+1), 750) );
 		}
-		doneButton = new TaskButton("DONE", DISPLAY_WIDTH-100, DISPLAY_HEIGHT - 50, 80,40 ){
-			@Override
-			public void doClick() {
-				System.out.println("scanphase");
-				scanPhase();
-			}
-		};
-		add(doneButton);
-		processDisplay();
 		repaint();
-		
+		processDisplay();
+		processDisplayNoClear();
+		getModel().getDeclarative().get(Symbol.get("goal")).set(Symbol.get("isa"),
+				Symbol.get("recall"));
+		System.out.println(getModel().getDeclarative().get(Symbol.get("goal")).toString());
 		
 	}
-
-	private void askPlane(int index) {
-		//askedPlane = index;
-		//addAural(0.0, "call-sign", "sound", planes.get(askedPlane).getValue());
-	}
-
+	
 //	private Plane getNearestPlane(double x, double y) {
 //		Plane nearest = null;
 //		double nearestDistance = 0;
@@ -196,6 +185,7 @@ public class SM extends Task {
 
 	@Override
 	public void clickMouse() {
+		
 		double mouseX = getMouseX();
 		double mouseY = getMouseY();
 		Point mousePoint = new Point((int)mouseX, (int)mouseY);
@@ -211,46 +201,28 @@ public class SM extends Task {
 					return;
 				}
 			}
-			else if ((component instanceof VisualObject) && component.isVisible()){
-				
+			else if ((component instanceof VisualObject) && component.isVisible() && mouseY>700){
+				VisualObject object = (VisualObject) component;
+				Rectangle bounds = component.getBounds();
+				if (bounds.contains(mousePoint)) {
+					pickedObject = (VisualObject) component;
+					repaint();
+					processDisplay();
+					processDisplayNoClear();
+					return;
+				}
 			}
 		}
 		
-		
-		
+		if (pickedObject != null && phase == Phase.recall && mouseY < 700){
+			pickedObject.moveTo(mousePoint);
+			repaint();
+			processDisplay();
+			processDisplayNoClear();
+			pickedObject = null;
+		}
+			
 	}
-//	public void clickMouse() {
-//		//double mouseX = random.nextGaussian() * NUMBER_OF_PLANES + getMouseX();
-//		//double mouseY = random.nextGaussian() * NUMBER_OF_PLANES + getMouseY();
-//
-//		if (pickedObject != null){
-//			Point loc = new Point(getMouseX(), getMouseY());
-//			VisualObject original =null;
-//			add(new VisualObject ( loc, 
-//					pickedObject.getShape(), pickedObject.getColour(),
-//					pickedObject.getHieght(), pickedObject.getPattern()));
-//			
-//			// Findding the original object for finding its original location
-//			for (VisualObject v: visualObjects){
-//				if (v.getShape() == pickedObject.getShape() &&
-//						v.getColour() == pickedObject.getColour() &&
-//						v.getHeight() == pickedObject.getHeight() &&
-//						v.getPattern() == pickedObject.getPattern())
-//					original = v;
-//			}
-//			
-//			double errorDistance = loc.distance(original.getPoint().x, original.getPoint().y);// Finding the error distance 
-//			System.out.println(errorDistance);
-//			
-//		}else if(pickedObject == null){
-//			
-//		}
-//
-//		//Plane nearest = getNearestPlane(mouseX, mouseY);
-//		//boolean correct = (nearest == planes.get(askedPlane));
-//		//responses[trial] = correct ? 1 : 0;
-//		//errors[trial] = nearest.getLocation().distance(mouseX, mouseY);
-//	}
 	
 	private void stopModel() {
 		getModel().stop();

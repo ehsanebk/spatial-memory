@@ -31,21 +31,26 @@ public class VisualObject extends JPanel implements TaskComponent {
 		SOLID, STIPPLED
 	};
 
+	private Task task;
 	private Point point;
+	private Point original;
 	private Shape shape;
 	private Colour colour;
 	private Hieght hieght;
 	private Pattern pattern;
+	
 
-	public VisualObject( Point point, Shape shape, Colour colour, Hieght hieght, Pattern pattern) {
+	public VisualObject( Task task,Point original, Point point, Shape shape, Colour colour, Hieght hieght, Pattern pattern) {
 
+		this.task = task;
 		this.point = point;
 		this.shape = shape;
 		this.colour = colour;
 		this.hieght = hieght;
 		this.pattern = pattern;
+		this.original =original;
 		
-		setBounds(point.getIntX(), point.getIntY(), 60, 60);
+		setBounds(point.getIntX(), point.getIntY(), 10, 10);
 		
 	}
 
@@ -53,6 +58,16 @@ public class VisualObject extends JPanel implements TaskComponent {
 //	public String getName() {
 //		return "Object";
 //	}
+	
+	public double distanceFromOriginalPosition (){
+		return point.distance(original);
+	}
+	
+	public void moveTo(Point point){
+		
+		setLocation(point.getIntX(), point.getIntY());
+		setBounds(point.getIntX(), point.getIntY(), 10, 10);
+	}
 
 	public Point getPoint() {
 		return point;
