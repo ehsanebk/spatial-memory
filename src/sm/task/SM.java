@@ -6,6 +6,7 @@ import java.awt.Rectangle;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 import java.util.Vector;
@@ -64,31 +65,28 @@ public class SM extends Task {
 	private List<VisualObject> visualObjects = new Vector<VisualObject>();
 	private int numberOfObjects = 0;
 	private int currentOrder;
-	private double currentDelay;
+	private int currentDelayIndex;
 	private double lastTime = 0;
 	private TaskButton doneButton;
 	private Random random = new Random();	
 	private VisualObject pickedObject = null;
 	
-	private Values modelMeanDistnaces = new Values();
-	private Values modelMeanRT = new Values();
-	
 	double [][] modelData = {           
-			//setsize+order 500:mean-distance  mean-rt  1000:mean-distance  mean-rt  1500:mean-distance  mean-rt
-			{        21,        0,             0,            0,             0,            0,             0       },
-			{        22,        0,             0,            0,             0,            0,             0       },
-			{        31,        0,             0,            0,             0,            0,             0       },
-			{        32,        0,             0,            0,             0,            0,             0       },
-			{        33,        0,             0,            0,             0,            0,             0       },
-			{        41,        0,             0,            0,             0,            0,             0       },
-			{        42,        0,             0,            0,             0,            0,             0       },
-			{        43,        0,             0,            0,             0,            0,             0       },
-			{        44,        0,             0,            0,             0,            0,             0       },
-			{        51,        0,             0,            0,             0,            0,             0       },
-			{        52,        0,             0,            0,             0,            0,             0       },
-			{        53,        0,             0,            0,             0,            0,             0       },
-			{        54,        0,             0,            0,             0,            0,             0       },
-			{        55,        0,             0,            0,             0,            0,             0       }};
+			//setsize+order*500*:counter|distance|rt*1000*:counter|distance|rt*1500*:counter|distance|rt
+			{        21,         0,      0,       0,       0,      0,       0,       0,      0,       0       },
+			{        22,         0,      0,       0,       0,      0,       0,       0,      0,       0       },
+			{        31,         0,      0,       0,       0,      0,       0,       0,      0,       0       },
+			{        32,         0,      0,       0,       0,      0,       0,       0,      0,       0       },
+			{        33,         0,      0,       0,       0,      0,       0,       0,      0,       0       },
+			{        41,         0,      0,       0,       0,      0,       0,       0,      0,       0       },
+			{        42,         0,      0,       0,       0,      0,       0,       0,      0,       0       },
+			{        43,         0,      0,       0,       0,      0,       0,       0,      0,       0       },
+			{        44,         0,      0,       0,       0,      0,       0,       0,      0,       0       },
+			{        51,         0,      0,       0,       0,      0,       0,       0,      0,       0       },
+			{        52,         0,      0,       0,       0,      0,       0,       0,      0,       0       },
+			{        53,         0,      0,       0,       0,      0,       0,       0,      0,       0       },
+			{        54,         0,      0,       0,       0,      0,       0,       0,      0,       0       },
+			{        55,         0,      0,       0,       0,      0,       0,       0,      0,       0       }};
                      
 
 	public SM() {
@@ -99,9 +97,9 @@ public class SM extends Task {
 			@Override
 			public void doClick() {
 				if (phase == Phase.scan){
-					currentDelay =DELAY_TIME[random.nextInt(3)];
+					currentDelayIndex =random.nextInt(3);
 					// making the changes after DELAY_TIME
-					addEvent(new Event( SM.this.getModel().getTime()+ currentDelay, "task", "update") {
+					addEvent(new Event( SM.this.getModel().getTime()+ DELAY_TIME[currentDelayIndex], "task", "update") {
 						@Override
 						public void action() {
 							recallPhase();
@@ -109,8 +107,9 @@ public class SM extends Task {
 					});
 
 				}
-				else
+				else{
 					scanPhase();
+				}
 			}
 		};
 		add(doneButton);
@@ -131,7 +130,6 @@ public class SM extends Task {
 	private void scanPhase() {
 		trial++;
 		if (trial > NUMBER_OF_TRIALS){
-			computeModelAverage();
 			stopModel();	
 		}
 		if (visualObjects.size() > 0)
@@ -150,6 +148,15 @@ public class SM extends Task {
         }
         Collections.shuffle(listOfRandomIndexes);
         
+        // [ shapeIndex colourIndex sizeIndex patternIndex ]
+//        List<List<Integer>> listOfObjecsIndexes = new ArrayList<List<Integer>>();
+//        for (int s = 0; s < Shape.values().length; s++)
+//        	for (int h = 0; h < Hieght.values().length; h++) 
+//        		for (int p = 0; p < Pattern.values().length; p++){
+//        			listOfObjecsIndexes.add(new List<Integer>
+//        		}
+			
+		
         
         Shape randomShape;
         Colour randomColour;
@@ -161,7 +168,8 @@ public class SM extends Task {
         	randomColour = Colour.values()[random.nextInt(Colour.values().length)];
         	randomHoieght = Hieght.values()[random.nextInt(Hieght.values().length)];
         	randomPattern = Pattern.values()[random.nextInt(Pattern.values().length)];
-        	VisualObject a = new VisualObject(this,LOC_ARRAY[listOfRandomIndexes.get(i)], LOC_ARRAY[listOfRandomIndexes.get(i)], randomShape, randomColour, randomHoieght, randomPattern);
+        	VisualObject a = new VisualObject(this,LOC_ARRAY[listOfRandomIndexes.get(i)], LOC_ARRAY[listOfRandomIndexes.get(i)], 
+        			randomShape, randomColour, randomHoieght, randomPattern);
     		visualObjects.add(a);
 		}
         
@@ -173,6 +181,7 @@ public class SM extends Task {
 
 		getModel().getDeclarative().get(Symbol.get("goal")).set(Symbol.get("isa"),
 				Symbol.get("scan"));
+		
 	}
 
 	private void recallPhase() {
@@ -228,7 +237,7 @@ public class SM extends Task {
 		if (pickedObject != null && phase == Phase.recall && mouseY < 700){
 			pickedObject.moveTo(mousePoint);
 			double RT = getModel().getTime() - lastTime;
-			allocateDistanceAndTimeForCurrentTria(pickedObject, RT ,numberOfObjects, currentOrder ,currentDelay);
+			allocateDistanceAndTimeForCurrentTria(pickedObject, RT ,numberOfObjects, currentOrder ,currentDelayIndex);
 			repaint();
 			processDisplay();
 			processDisplayNoClear();
@@ -239,58 +248,59 @@ public class SM extends Task {
 	}
 
 	private void stopModel() {
-	
-		// ordering the values in a list for getting correlation at the end 
-		for (int i = 0; i < modelData.length; i++) {
-			modelMeanDistnaces.add(modelData[i][1]);
-			modelMeanRT.add(modelData[i][2]);
-			modelMeanDistnaces.add(modelData[i][3]);
-			modelMeanRT.add(modelData[i][4]);
-			modelMeanDistnaces.add(modelData[i][5]);
-			modelMeanRT.add(modelData[i][6]);
-		}
-		
 		getModel().stop();
 	}
-
+	
 	// run through the model data and sum up the distance order and response times to calculate the mean
-	private void allocateDistanceAndTimeForCurrentTria(VisualObject v , double responseTime, int numberOfObjects, int currentOrder , double currentDelay){
+	private void allocateDistanceAndTimeForCurrentTria(VisualObject v , double responseTime, int numberOfObjects, int currentOrder , int currentDelayIndex){
 		int setsize_order = numberOfObjects*10 + currentOrder;
+		if ( v.distanceFromOriginalPosition()>10)
+			getModel().stop();
 		for (int i = 0; i < modelData.length; i++) {
 			if (modelData[i][0] == setsize_order){
-				System.out.println(setsize_order);
-				 modelData[i][(int)currentDelay*4] += v.distanceFromOriginalPosition();
-				 modelData[i][(int)currentDelay*4 +1] += v.distanceFromOriginalPosition();
+				modelData[i][currentDelayIndex*3+1] ++; // adding to the counter 
+				modelData[i][currentDelayIndex*3+2] += v.distanceFromOriginalPosition();
+				modelData[i][currentDelayIndex*3+3] += responseTime;
 			}	
-		}
-		
-	}
-	private void computeModelAverage(){
-		for (int i = 0; i < modelData.length; i++) {
-			for (int j = 1; j < modelData[i].length; j++) {
-				modelData[i][j] /= modelData[i][j] / trial;
-			} 	
 		}
 	}
 
 	
-
-	double [][] subjectData = {		
+	
+	
+	double [][] humanData = {		
 //	   setsize order 500:mean-distance  mean-rt  1000:mean-distance  mean-rt  1500:mean-distance  mean-rt
-			{21,         48.98669,      2.118309,     51.06345,      1.977565,     49.39542,      2.108340},
-			{22,         57.17774,      2.060967,     60.71604,      2.083069,     65.27009,      2.057485},
-			{31,         52.59191,      2.089555,     57.68851,      2.120293,     59.14785,      2.114943},
-			{32,         79.52583,      2.066912,     72.39516,      2.193382,     78.24223,      2.189131},
-			{33,         91.71579,      1.975042,     83.36576,      2.035882,     86.20471,      2.061694},
-			{41,         66.33435,      2.174735,     67.27975,      2.259349,     69.61219,      2.284546},
-			{42,         79.94063,      2.094857,     84.32421,      2.191237,     84.53771,      2.189087},
-			{43,         106.47135,     2.069533,     01.27530,      2.153021,     108.70950,     2.206206},
-			{44,         106.77691,     1.916349,     10.63078,      1.945411,     113.19957,     1.999764},
-			{51,         74.11933,      2.496001,     78.10549,      2.433900,     76.17092,      2.408664},
-			{52,         91.23742,      2.225441,     98.99052,      2.285018,     103.93411,     2.357762},
-			{53,         120.28720,     2.194071,     19.91568,      2.166547,     127.75890,     2.311127},
-			{54,         133.92358,     2.168754,     37.39534,      2.092915,     136.47923,     2.113358},
-			{55,         131.44671,     1.899707,     30.99772,      1.934896,     135.33160,     1.884930}};
+			 {21,        48.98669,      2.118309,     51.06345,      1.977565,     49.39542,      2.108340},
+			 {22,        57.17774,      2.060967,     60.71604,      2.083069,     65.27009,      2.057485},
+			 {31,        52.59191,      2.089555,     57.68851,      2.120293,     59.14785,      2.114943},
+			 {32,        79.52583,      2.066912,     72.39516,      2.193382,     78.24223,      2.189131},
+			 {33,        91.71579,      1.975042,     83.36576,      2.035882,     86.20471,      2.061694},
+			 {41,        66.33435,      2.174735,     67.27975,      2.259349,     69.61219,      2.284546},
+			 {42,        79.94063,      2.094857,     84.32421,      2.191237,     84.53771,      2.189087},
+			 {43,        106.47135,     2.069533,     101.27530,     2.153021,     108.70950,     2.206206},
+			 {44,        106.77691,     1.916349,     110.63078,     1.945411,     113.19957,     1.999764},
+			 {51,        74.11933,      2.496001,     78.10549,      2.433900,     76.17092,      2.408664},
+			 {52,        91.23742,      2.225441,     98.99052,      2.285018,     103.93411,     2.357762},
+			 {53,        120.28720,     2.194071,     119.91568,     2.166547,     127.75890,     2.311127},
+			 {54,        133.92358,     2.168754,     137.39534,     2.092915,     136.47923,     2.113358},
+			 {55,        131.44671,     1.899707,     130.99772,     1.934896,     135.33160,     1.884930}};
+	
+	double [][] experimentData = {           
+			//setsize+order*500*:counter|distance|rt*1000*:counter|distance|rt*1500*:counter|distance|rt         
+			{        21,         0,      0,       0,       0,      0,       0,       0,      0,       0       }, 
+			{        22,         0,      0,       0,       0,      0,       0,       0,      0,       0       }, 
+			{        31,         0,      0,       0,       0,      0,       0,       0,      0,       0       }, 
+			{        32,         0,      0,       0,       0,      0,       0,       0,      0,       0       }, 
+			{        33,         0,      0,       0,       0,      0,       0,       0,      0,       0       }, 
+			{        41,         0,      0,       0,       0,      0,       0,       0,      0,       0       }, 
+			{        42,         0,      0,       0,       0,      0,       0,       0,      0,       0       }, 
+			{        43,         0,      0,       0,       0,      0,       0,       0,      0,       0       }, 
+			{        44,         0,      0,       0,       0,      0,       0,       0,      0,       0       }, 
+			{        51,         0,      0,       0,       0,      0,       0,       0,      0,       0       }, 
+			{        52,         0,      0,       0,       0,      0,       0,       0,      0,       0       }, 
+			{        53,         0,      0,       0,       0,      0,       0,       0,      0,       0       }, 
+			{        54,         0,      0,       0,       0,      0,       0,       0,      0,       0       }, 
+			{        55,         0,      0,       0,       0,      0,       0,       0,      0,       0       }};
 
 	@Override
 	public Result analyze(Task[] tasks, boolean output) {
@@ -300,50 +310,78 @@ public class SM extends Task {
 			Values humanMeanDistances = new Values();
 			Values humanMeanRT = new Values();
 			
-			for (int i = 0; i < subjectData.length; i++) {
+			Values humanCombinedDelaysMeanDistances = new Values();
+			Values humanCombinedDalaysMeanRT = new Values();
+			
+			for (int i = 0; i < humanData.length; i++) {
 
-				humanMeanDistances.add(subjectData[i][1]);
-				humanMeanRT.add(subjectData[i][2]);
-				humanMeanDistances.add(subjectData[i][3]);
-				humanMeanRT.add(subjectData[i][4]);
-				humanMeanDistances.add(subjectData[i][5]);
-				humanMeanRT.add(subjectData[i][6]);
+				humanMeanDistances.add(humanData[i][1]);
+				humanMeanRT.add(humanData[i][2]);
+				humanMeanDistances.add(humanData[i][3]);
+				humanMeanRT.add(humanData[i][4]);
+				humanMeanDistances.add(humanData[i][5]);
+				humanMeanRT.add(humanData[i][6]);
+				// combined delays
+				humanCombinedDelaysMeanDistances.add((humanData[i][1]+humanData[i][3]+humanData[i][5])/3);
+				humanCombinedDalaysMeanRT.add((humanData[i][2]+humanData[i][4]+humanData[i][6])/3);
 			}
 			
+			Values experimentMeanDistances = new Values();
+			Values experimentMeanRT = new Values();
 			
-			Values allModelMeanDistances = new Values();
-			Values allModelMeanRT = new Values();
+			Values experimentCombinedDelaysMeanDistances = new Values();
+			Values experimentCombinedDelaysMeanRT = new Values();
 			
-			int numberOfExperiments= 0;
 			for (Task taskCast : tasks) {
 				SM task = (SM) taskCast;
-				allModelMeanDistances.add(task.modelMeanDistnaces);
-				allModelMeanRT.add(task.modelMeanRT);
-				numberOfExperiments++;
+				for (int i = 0; i < task.modelData.length; i++) {
+					for (int j = 1; j < task.modelData[i].length; j++) {
+						experimentData[i][j] += task.modelData[i][j];
+					}
+				}
+			}
+		
+			// computing the mean of distances and RTs with dividing them by the their counter
+			for (int i = 0; i < experimentData.length; i++) {
+				experimentData[i][2]/=experimentData[i][1];experimentData[i][3]/=experimentData[i][1];experimentData[i][1]=1;
+				experimentMeanDistances.add(experimentData[i][2]);experimentMeanRT.add(experimentData[i][3]);
+				experimentData[i][5]/=experimentData[i][4];experimentData[i][6]/=experimentData[i][4];experimentData[i][4]=1;
+				experimentMeanDistances.add(experimentData[i][5]);experimentMeanRT.add(experimentData[i][6]);
+				experimentData[i][8]/=experimentData[i][7];experimentData[i][9]/=experimentData[i][7];experimentData[i][7]=1;
+				experimentMeanDistances.add(experimentData[i][8]);experimentMeanRT.add(experimentData[i][9]);
+				// combined delays
+				experimentCombinedDelaysMeanDistances.add((experimentData[i][2]+experimentData[i][5]+experimentData[i][8])/3);
+				experimentCombinedDelaysMeanRT.add((experimentData[i][3]+experimentData[i][6]+experimentData[i][9])/3);
 			}
 			
-			allModelMeanDistances.divide(numberOfExperiments);
-			allModelMeanRT.divide(numberOfExperiments);
 
 			DecimalFormat df1 = new DecimalFormat("#.0");
 			DecimalFormat df3 = new DecimalFormat("#.000");
 
-			getModel().output("\n=========  Results  ===========\n");
-
+			getModel().output("\n=========  Results  ===========");
+			getModel().output("Create two lists of the subject and model data and then "
+					+ "compute the correlation and mean deviation\n");
 			if (output) {
-				double rDistance = humanMeanDistances.correlation(allModelMeanDistances);
-				double rRT = humanMeanRT.correlation(allModelMeanRT);
-				getModel().output("\n=====\n");
-				
+				double rDistance = humanMeanDistances.correlation(experimentMeanDistances);
+				double rRT = humanMeanRT.correlation(experimentMeanRT);
 				
 				getModel().output("Correlation Value for Distances = " + String.format("%.2f", rDistance));
 				getModel().output("Correlation Value for RTs       = " + String.format("%.2f", rRT));
 				
 			}
 
-			
-			getModel().output("Overall Location Error: " + df1.format(allModelMeanDistances.mean()));
-			getModel().output("Overall Responces     : " + df1.format(allModelMeanRT.mean()));
+			getModel().output("\n=========  Raw Distances Data  ===========");
+			getModel().output("humanMeanDistances      : " + humanMeanDistances.toString(df1));
+			getModel().output("experimentMeanDistances : " + experimentMeanDistances.toString(df1));
+			getModel().output("\n=========  Raw RT Data  ===========");
+			getModel().output("humanMeanRT             : " + humanMeanRT.toString(df1));
+			getModel().output("experimentMeanRT        : " + experimentMeanRT.toString(df1));
+			getModel().output("\n=========  Raw Combined Delays Data  ===========");
+			getModel().output("Create the lists with the mean of the three different delays(0.5, 1.0 and 1.5)\n");
+			getModel().output("Combined disntances(human) : " + humanCombinedDelaysMeanDistances.toString(df1));
+			getModel().output("Combined disntances        : " + experimentCombinedDelaysMeanDistances.toString(df1));
+			getModel().output("Combined RTs(human)   : " + humanCombinedDalaysMeanRT.toString(df1));
+			getModel().output("Combined RTs          : " + experimentCombinedDelaysMeanRT.toString(df1));
 
 			
 		} catch (Exception e) {

@@ -3,17 +3,21 @@
 (sgp
     :esc t
     :emma t
-    ;;:bll 0.5
-    :rt 1
+    :bll nil
     :ans 0.5
     :v t
+    ;;:ol 1                     ;; optimised learning
+    ;; :tmp 2.0                  ;; 1.25 1.6 
+    ;; :mp 1.7 ;  1.9            ;; partial matching (match scale parameter - usually 2.0)
+    :rt -10.0                 ;; retrieval threshold
+    :lf 0.05                   ;; latency factor
     
     :visual-num-finsts 20
     :visual-finst-span 20
 )
 
 (add-dm
-    (goal isa scan)
+    (goal isa scan id 1)
 )
 (goal-focus goal)
 
@@ -48,6 +52,7 @@
         isa scan
     =visual-location>
         isa visual-location
+        kind object
     ?visual>
         buffer empty
         state free
@@ -60,6 +65,7 @@
 (p scan*remember-object
     =goal>
         isa scan
+        id =id
     =visual>
         isa object
         screen-pos =pos
@@ -70,6 +76,7 @@
         isa object
         properties =value
         location =pos
+        id =id
     -imaginal>
     =goal>
         isa scan
@@ -202,6 +209,7 @@
 (p recall*found-target->recall-object-location
     =goal>
         isa recalling
+        id =id
     =imaginal>
         properties =value
     ?retrieval>
@@ -211,6 +219,7 @@
     +retrieval>
         isa object
         properties =value
+        id =id
     =goal>
         isa recalling
 )     
@@ -236,6 +245,7 @@
     +manual>
         isa move-cursor
         loc =loc
+        noise 0
 )
 
 (p recall*failed
@@ -250,7 +260,6 @@
     +visual-location>
         isa visual-location
         kind cross
-        ;;
 )
 (p recall*failed->move-cursur-to-center
     =goal>
@@ -266,6 +275,7 @@
     +manual>
         isa move-cursor
         loc =visual-location
+        noise 0
     =goal>
         isa click-recalled-position
     +visual>
@@ -282,9 +292,29 @@
 ==>
     -retrieval>
     =goal>
-        isa recall
+        isa look-at-center  ;;recall
     +manual>
         isa click-mouse
+    +visual-location>
+        isa visual-location
+        kind cross
+    -visual>
+)
+(p recall*look-at-button
+    =goal>
+        isa look-at-center
+    =visual-location>
+        isa visual-location
+        kind cross
+    ?visual>
+        buffer empty
+        state free
+==>
+    +visual>
+        isa move-attention
+        screen-pos =visual-location
+    =goal>
+        isa recall
     -visual>
     -visual-location>
 )
@@ -328,12 +358,15 @@
 (p recall*click-mouse->go-to-scan
     =goal>
         isa click-mouse-start-scan
+        id =id
     ?manual>
         state free
 ==>
+    !bind! =new-id (+ =id 1)
     -retrieval>
     =goal>
         isa scan
+        id =new-id
     +manual>
         isa click-mouse
     -visual>

@@ -67,6 +67,7 @@ public class VisualObject extends JPanel implements TaskComponent {
 		
 		setLocation(point.getIntX(), point.getIntY());
 		setBounds(point.getIntX(), point.getIntY(), 10, 10);
+		this.point = point;
 	}
 
 	public Point getPoint() {
