@@ -81,7 +81,7 @@
     ?visual-location>
         state error
 ==>
-    +goal>
+    =goal>
         isa move-mouse-start-recall
     +visual-location>
         isa visual-location
@@ -117,49 +117,30 @@
         state free
 ==>
     -retrieval>
-    +goal>
+    =goal>
         isa wait
     +manual>
         isa click-mouse
     -visual>
     -visual-location>
 )
-
-(p wait 
+(p wait
     =goal>
         isa wait
-    ?manual>
-        state                 free
-    ?visual>
-        state                 free
-    ?visual-location>
-        buffer                empty
 ==>
+    =goal>
+    -visual>
+    -visual-location>
 )
 
 ;;===========================
 
-#|
-(p scan*no-more-objects->look-for-targets
-    =goal>
-        isa scann
-    ?visual-location>
-        state error
-==>
-    +goal>
-        isa recall
-    +visual(-location>
-        isa visual-location
-        kind objectsw
-        > screen-y 700 
-    -visual>
-)
-        |#
-        
-        ;;;
-        ;;; Recall
-        ;;;
-        
+
+
+;;;
+;;; Recall
+;;;
+
 (p recall*find-targets
     =goal>
         isa recall
@@ -173,11 +154,11 @@
     +visual-location>
         isa visual-location
         kind object
-        >screen-y 700
+        > screen-y 700
         :attended nil
         screen-x lowest
 )
-        
+
 (p recall*found-target-location->move-to-it
     =goal>
         isa recall
@@ -194,10 +175,10 @@
     +manual>
         isa move-cursor
         loc =visual-location
-    +goal>
+    =goal>
         isa click-target
 )
-        
+
 (p recall*found-target-location->click-mouse
     =goal>
         isa click-target
@@ -211,13 +192,13 @@
     +imaginal>
         properties =value
     -retrieval>
-    +goal>
+    =goal>
         isa recalling
     +manual>
         isa click-mouse
 )
-        
-        
+
+
 (p recall*found-target->recall-object-location
     =goal>
         isa recalling
@@ -230,10 +211,10 @@
     +retrieval>
         isa object
         properties =value
-    +goal>
+    =goal>
         isa recalling
 )     
-        
+
 (p recall*recalled
     =goal>
         isa recalling
@@ -247,7 +228,7 @@
     ?manual>
         state   free
 ==>
-    +goal>
+    =goal>
         isa click-recalled-position
     +visual>
         isa move-attention
@@ -256,7 +237,7 @@
         isa move-cursor
         loc =loc
 )
-        
+
 (p recall*failed
     =goal>
         isa recalling
@@ -264,7 +245,7 @@
         state error
 ==>
     -retrieval>
-    +goal>
+    =goal>
         isa move-center
     +visual-location>
         isa visual-location
@@ -285,14 +266,14 @@
     +manual>
         isa move-cursor
         loc =visual-location
-    +goal>
+    =goal>
         isa click-recalled-position
     +visual>
         isa move-attention
         screen-pos =visual-location
         ;;
 )
-        
+
 (p recall*click-recalled-position
     =goal>
         isa click-recalled-position
@@ -300,14 +281,14 @@
         state free
 ==>
     -retrieval>
-    +goal>
+    =goal>
         isa recall
     +manual>
         isa click-mouse
     -visual>
     -visual-location>
 )
-        
+
 (p recall*no-more-objects->look-for-button
     =goal>
         isa recall
@@ -315,7 +296,7 @@
         - buffer requested
         state error
 ==>
-    +goal>
+    =goal>
         isa move-mouse-start-scan
     +visual-location>
         isa visual-location
@@ -323,7 +304,7 @@
         > screen-y 700
     -visual>
 )
-        
+
 (p recall*found-a-button->move-to-it
     =goal>
         isa move-mouse-start-scan
@@ -351,12 +332,12 @@
         state free
 ==>
     -retrieval>
-    +goal>
+    =goal>
         isa scan
     +manual>
         isa click-mouse
     -visual>
     -visual-location>
 )
-        
-        
+
+
