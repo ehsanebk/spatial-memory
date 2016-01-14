@@ -6,17 +6,12 @@ import java.awt.Rectangle;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 import java.util.Vector;
-
-import javax.sql.rowset.spi.TransactionalWriter;
-
 import actr.model.Event;
 import actr.model.Symbol;
 import actr.task.Result;
-import actr.task.Statistics;
 import actr.task.Task;
 import actr.task.TaskButton;
 import actr.task.TaskCross;
@@ -142,36 +137,31 @@ public class SM extends Task {
 		numberOfObjects = random.nextInt(4)+2;
 	
 		// making unique random number for the picking up the locations of the shapes
-		ArrayList<Integer> listOfRandomIndexes = new ArrayList<Integer>();
+		ArrayList<Integer> listOfLocIndexes = new ArrayList<Integer>();
 		for (int i=0; i<16; i++) {
-			listOfRandomIndexes.add(new Integer(i));
+			listOfLocIndexes.add(new Integer(i));
         }
-        Collections.shuffle(listOfRandomIndexes);
+        Collections.shuffle(listOfLocIndexes);
         
         // [ shapeIndex colourIndex sizeIndex patternIndex ]
-//        List<List<Integer>> listOfObjecsIndexes = new ArrayList<List<Integer>>();
-//        for (int s = 0; s < Shape.values().length; s++)
-//        	for (int h = 0; h < Hieght.values().length; h++) 
-//        		for (int p = 0; p < Pattern.values().length; p++){
-//        			listOfObjecsIndexes.add(new List<Integer>
-//        		}
-			
-		
-        
-        Shape randomShape;
-        Colour randomColour;
-        Hieght randomHoieght;
-        Pattern randomPattern;
-       
+        List<int []> listOfObjecsIndexes = new ArrayList<int []>();
+        for (int s = 0; s < Shape.values().length; s++)
+        	for (int c = 0; c < Colour.values().length; c++)
+        		for (int h = 0; h < Hieght.values().length; h++) 
+        			for (int p = 0; p < Pattern.values().length; p++){
+        				listOfObjecsIndexes.add(new int[] {s,c,h,p} );
+        				}
+        Collections.shuffle(listOfObjecsIndexes);
+
         for (int i = 0; i < numberOfObjects; i++) {
-        	randomShape = Shape.values()[random.nextInt(Shape.values().length)];
-        	randomColour = Colour.values()[random.nextInt(Colour.values().length)];
-        	randomHoieght = Hieght.values()[random.nextInt(Hieght.values().length)];
-        	randomPattern = Pattern.values()[random.nextInt(Pattern.values().length)];
-        	VisualObject a = new VisualObject(this,LOC_ARRAY[listOfRandomIndexes.get(i)], LOC_ARRAY[listOfRandomIndexes.get(i)], 
-        			randomShape, randomColour, randomHoieght, randomPattern);
-    		visualObjects.add(a);
-		}
+        	VisualObject a = new VisualObject(this,LOC_ARRAY[listOfLocIndexes.get(i)], LOC_ARRAY[listOfLocIndexes.get(i)], 
+        			Shape.values()[listOfObjecsIndexes.get(i)[0]] , // index 0 for shape
+        			Colour.values()[listOfObjecsIndexes.get(i)[1]] , //index 1 for colour
+        			Hieght.values()[listOfObjecsIndexes.get(i)[2]] , //index 2 for hieght
+        			Pattern.values()[listOfObjecsIndexes.get(i)[3]]  //index 3 for pattern
+         			);
+        	visualObjects.add(a);
+        }
         
 		
 		for (VisualObject v : visualObjects)
@@ -216,7 +206,7 @@ public class SM extends Task {
 				Rectangle bounds = component.getBounds();
 				if (bounds.contains(mousePoint)) {
 					taskButton.doClick();
-					repaint();
+					processDisplay();
 					return;
 				}
 			}
@@ -226,9 +216,7 @@ public class SM extends Task {
 				Rectangle bounds = component.getBounds();
 				if (bounds.contains(mousePoint)) {
 					pickedObject = (VisualObject) component;
-					repaint();
 					processDisplay();
-					processDisplayNoClear();
 					return;
 				}
 			}
@@ -236,15 +224,12 @@ public class SM extends Task {
 		
 		if (pickedObject != null && phase == Phase.recall && mouseY < 700){
 			pickedObject.moveTo(mousePoint);
+			processDisplay();
 			double RT = getModel().getTime() - lastTime;
 			allocateDistanceAndTimeForCurrentTria(pickedObject, RT ,numberOfObjects, currentOrder ,currentDelayIndex);
-			repaint();
-			processDisplay();
-			processDisplayNoClear();
 			pickedObject = null;
 			currentOrder++;
 		}
-			
 	}
 
 	private void stopModel() {
@@ -254,8 +239,6 @@ public class SM extends Task {
 	// run through the model data and sum up the distance order and response times to calculate the mean
 	private void allocateDistanceAndTimeForCurrentTria(VisualObject v , double responseTime, int numberOfObjects, int currentOrder , int currentDelayIndex){
 		int setsize_order = numberOfObjects*10 + currentOrder;
-		if ( v.distanceFromOriginalPosition()>10)
-			getModel().stop();
 		for (int i = 0; i < modelData.length; i++) {
 			if (modelData[i][0] == setsize_order){
 				modelData[i][currentDelayIndex*3+1] ++; // adding to the counter 
@@ -362,28 +345,34 @@ public class SM extends Task {
 			getModel().output("Create two lists of the subject and model data and then "
 					+ "compute the correlation and mean deviation\n");
 			if (output) {
-				double rDistance = humanMeanDistances.correlation(experimentMeanDistances);
-				double rRT = humanMeanRT.correlation(experimentMeanRT);
+				getModel().output("\n=========  Raw Distances Data  ===========");
+				getModel().output("humanMeanDistances      :\t" + humanMeanDistances.toString(df1));
+				getModel().output("experimentMeanDistances :\t" + experimentMeanDistances.toString(df1));
+				getModel().output("\n=========  Raw RT Data  ===========");
+				getModel().output("humanMeanRT             :\t" + humanMeanRT.toString(df1));
+				getModel().output("experimentMeanRT        :\t" + experimentMeanRT.toString(df1));
+				double rmseDistance = humanMeanDistances.rmse(experimentMeanDistances);
+				double rmseRT = humanMeanRT.rmse(experimentMeanRT);
+				getModel().output("\n");
+				getModel().output("rmse Value for Distances =\t" + String.format("%.2f", rmseDistance));
+				getModel().output("rmse Value for RTs       =\t" + String.format("%.2f", rmseRT));
 				
-				getModel().output("Correlation Value for Distances = " + String.format("%.2f", rDistance));
-				getModel().output("Correlation Value for RTs       = " + String.format("%.2f", rRT));
-				
+				getModel().output("\n=========  Raw Combined Delays Data  ===========");
+				getModel().output("Create the lists with the mean of the three different delays(0.5, 1.0 and 1.5)\n");
+				getModel().output("setsize,order              :\t2,1 \t2,2 \t3,1 \t3,2 \t3,3 \t4,1 \t4,2 \t4,3 \t4,4 \t5,1 \t5,2 \t5,3 \t5,4 \t5,5" );
+				getModel().output("----------------------------------------------------------------" 
+						+ "------------------------------------------------------------------------------");
+				getModel().output("Combined disntances(human) :\t" + humanCombinedDelaysMeanDistances.toString(df1));
+				getModel().output("Combined disntances        :\t" + experimentCombinedDelaysMeanDistances.toString(df1));
+				getModel().output("Combined RTs(human)        :\t" + humanCombinedDalaysMeanRT.toString(df1));
+				getModel().output("Combined RTs               :\t" + experimentCombinedDelaysMeanRT.toString(df1));
+				double rmseCombinedDistance = humanCombinedDelaysMeanDistances.rmse(experimentCombinedDelaysMeanDistances);
+				double rmseCombinedRT = humanCombinedDalaysMeanRT.rmse(experimentCombinedDelaysMeanRT);
+				getModel().output("\n");
+				getModel().output("rmse Value for Distances =\t" + String.format("%.2f", rmseCombinedDistance));
+				getModel().output("rmse Value for RTs       =\t" + String.format("%.2f", rmseCombinedRT));
 			}
 
-			getModel().output("\n=========  Raw Distances Data  ===========");
-			getModel().output("humanMeanDistances      : " + humanMeanDistances.toString(df1));
-			getModel().output("experimentMeanDistances : " + experimentMeanDistances.toString(df1));
-			getModel().output("\n=========  Raw RT Data  ===========");
-			getModel().output("humanMeanRT             : " + humanMeanRT.toString(df1));
-			getModel().output("experimentMeanRT        : " + experimentMeanRT.toString(df1));
-			getModel().output("\n=========  Raw Combined Delays Data  ===========");
-			getModel().output("Create the lists with the mean of the three different delays(0.5, 1.0 and 1.5)\n");
-			getModel().output("Combined disntances(human) : " + humanCombinedDelaysMeanDistances.toString(df1));
-			getModel().output("Combined disntances        : " + experimentCombinedDelaysMeanDistances.toString(df1));
-			getModel().output("Combined RTs(human)   : " + humanCombinedDalaysMeanRT.toString(df1));
-			getModel().output("Combined RTs          : " + experimentCombinedDelaysMeanRT.toString(df1));
-
-			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

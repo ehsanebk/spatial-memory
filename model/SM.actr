@@ -3,17 +3,19 @@
 (sgp
     :esc t
     :emma t
-    :bll nil
+    :bll 0.6
     :ans 0.5
-    :v t
-    ;;:ol 1                     ;; optimised learning
-    ;; :tmp 2.0                  ;; 1.25 1.6 
-    ;; :mp 1.7 ;  1.9            ;; partial matching (match scale parameter - usually 2.0)
-    :rt -10.0                 ;; retrieval threshold
-    :lf 0.05                   ;; latency factor
+    :v nil
+    
+    :rt -0.5               ;; retrieval threshold
+    ;;:lf 0.05                   ;; latency factor
     
     :visual-num-finsts 20
     :visual-finst-span 20
+    
+    :motor-feature-prep-time 0.0
+    :motor-initiation-time 0.0
+    :max-prep-time-diff 10
 )
 
 (add-dm
@@ -27,7 +29,7 @@
 (start-hand-at-mouse)
 
 ;;;
-;;; Scan
+;;; Scan Phase
 ;;;
 
 (p scan*find-object
@@ -245,7 +247,7 @@
     +manual>
         isa move-cursor
         loc =loc
-        noise 0
+        noise 0.03
 )
 
 (p recall*failed
@@ -275,7 +277,7 @@
     +manual>
         isa move-cursor
         loc =visual-location
-        noise 0
+        noise 0.0
     =goal>
         isa click-recalled-position
     +visual>
@@ -300,7 +302,7 @@
         kind cross
     -visual>
 )
-(p recall*look-at-button
+(p recall*look-at-center
     =goal>
         isa look-at-center
     =visual-location>

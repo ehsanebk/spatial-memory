@@ -6,9 +6,11 @@ import java.awt.Graphics2D;
 import java.awt.Polygon;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
+import java.awt.TexturePaint;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.GeneralPath;
 import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
 
 import javax.swing.JPanel;
 
@@ -68,6 +70,7 @@ public class VisualObject extends JPanel implements TaskComponent {
 		setLocation(point.getIntX(), point.getIntY());
 		setBounds(point.getIntX(), point.getIntY(), 10, 10);
 		this.point = point;
+		repaint();
 	}
 
 	public Point getPoint() {
@@ -134,15 +137,26 @@ public class VisualObject extends JPanel implements TaskComponent {
 		default:
 			color = Color.BLACK;
 			break;
-		}	
+		}
+		
+//		switch (pattern) {
+//		case SOLID:
+//			
+//			break;
+//		case STIPPLED:
+//			
+//			break;
+//		default:
+//			
+//			break;
+//		}
 
 		Graphics2D g2 = (Graphics2D) g;
 		g2.setClip(-x_offset, -y_offset, 2*x_offset,2*y_offset );
 		java.awt.Shape s;
+	
 		switch (shape) {
 		case CIRCLE:
-			g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-					RenderingHints.VALUE_ANTIALIAS_ON);
 			g2.setPaint(color);
 			s = new Ellipse2D.Double(-x_offset, -y_offset , 2 * x_offset, 2 * y_offset);
 			g2.draw(s);
@@ -150,8 +164,6 @@ public class VisualObject extends JPanel implements TaskComponent {
 			g2.dispose();
 			break;
 		case RECTANGLE:
-			g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-					RenderingHints.VALUE_ANTIALIAS_ON);
 			g2.setPaint(color);
 			s  = new Rectangle2D.Double(-x_offset, -y_offset , 2 * x_offset, 2 *y_offset);
 			g2.draw(s);
@@ -159,8 +171,6 @@ public class VisualObject extends JPanel implements TaskComponent {
 			g2.dispose();
 			break;
 		case TRIANGLE:
-			g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-					RenderingHints.VALUE_ANTIALIAS_ON);
 			g2.setPaint(color);
 			GeneralPath triangle = new GeneralPath();;
 			triangle.moveTo(-x_offset,y_offset );
@@ -175,6 +185,8 @@ public class VisualObject extends JPanel implements TaskComponent {
 			
 		default:
 			break;
-		}		
+		}
+		
+			
 	}
 }

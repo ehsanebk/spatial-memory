@@ -39,6 +39,22 @@ public class Values {
 			return 0;
 		}
 	}
+	public double rmse(Values vals2) {
+		double[] v1 = new double[v.size()];
+		double[] v2 = new double[vals2.size()];
+		if (v1.length == v2.length){
+			for (int i = 0; i < v2.length; i++) {
+				v1[i] = v.get(i);
+				v2[i] = vals2.get(i);
+			}
+			return Statistics.rmse(v1, v2);
+		
+		}
+		else{
+			return 0;
+		}
+	}
+	
 	public void divide(double d) {
 		for (int i = 0; i < v.size(); i++)
 			v.set(i, v.get(i)/d);
