@@ -195,8 +195,8 @@ public class SM extends Task {
 	@Override
 	public void clickMouse() {
 		
-		double mouseX = getMouseX() - 20; // there is a 20 pixels error for the X coordinates in the architecture
-		double mouseY = getMouseY() - 10; // there is a 10 pixels error for the Y coordinates in the architecture
+		double mouseX = getMouseX() ; // there is a xx pixels error for the X coordinates in the architecture
+		double mouseY = getMouseY() ; // there is a xx pixels error for the Y coordinates in the architecture
 		Point mousePoint = new Point((int)mouseX, (int)mouseY);
 		Component[] components = getComponents();
 		for (int i = 0; i < components.length; i++) {
