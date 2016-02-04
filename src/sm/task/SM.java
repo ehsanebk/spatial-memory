@@ -205,7 +205,8 @@ public class SM extends Task {
 				double activation = plane.getActivation();
 				double base = .0;
 				double scale = .1;
-				double noise = Math.min(base + scale * Math.exp(-activation) + numberOfObjects/200.0 , 0.1 );
+				//double noise = Math.min(base + scale * Math.exp(-activation) + numberOfObjects/200.0 , 0.1 );
+				double noise = Math.pow(numberOfObjects/2.0, 2) / 100.0 ;
 //				System.out.println("noise = " + noise);
 //				System.out.println("activation = " + activation);
 				return noise;

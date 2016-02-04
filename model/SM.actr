@@ -3,7 +3,7 @@
 (sgp
     :esc t
     :emma t
-    :bll 0.8
+    :bll 0.5
     :ans 0.5
     :rt -0.5               ;; retrieval threshold
     
