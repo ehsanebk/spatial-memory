@@ -202,13 +202,21 @@ public class SM extends Task {
 			if (cmd.equals("noise")) {
 				String name = it.next();
 				Chunk plane = getModel().getDeclarative().get(Symbol.get(name));
-				double activation = plane.getActivation();
-				double base = .0;
-				double scale = .1;
-				//double noise = Math.min(base + scale * Math.exp(-activation) + numberOfObjects/200.0 , 0.1 );
-				double noise = Math.pow(numberOfObjects/2.0, 2) / 100.0 ;
-//				System.out.println("noise = " + noise);
-//				System.out.println("activation = " + activation);
+				double activation = plane.getBaseLevel(); // getActivation();
+				double threshold = -0.5;
+
+				double base = .02;
+				double scale = .18;
+				double noise = base + scale * (activation >= threshold ? Math.exp(-activation + threshold) : 1);
+
+				// double base = .0;
+				// double scale = .1;
+				// double noise = Math.min( Math.pow(NUMBER_OF_PLANES/2.0, 2) /
+				// 100.0 , 0.20 );
+
+				 System.out.println("noise = " + noise);
+				 System.out.println("activation = " + activation);
+
 				return noise;
 			} else
 				return 0;
@@ -397,6 +405,8 @@ public class SM extends Task {
 				getModel().output("\n");
 				getModel().output("rmse Value for Distances =\t" + String.format("%.2f", rmseCombinedDistance));
 				getModel().output("rmse Value for RTs       =\t" + String.format("%.2f", rmseCombinedRT));
+//				getModel().output("R-squared Value for RTs       =\t" + String.format("%.2f", rmseCombinedRT));
+//				getModel().output("R-squared Value for RTs       =\t" + String.format("%.2f", rmseCombinedRT));
 			}
 
 		} catch (Exception e) {
