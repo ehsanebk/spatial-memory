@@ -3,13 +3,12 @@
 (sgp
     :esc t
     :emma t
-    :bll 0.6
+    :bll 0.8
     :ans 0.5
-    :v nil
-    
     :rt -0.5               ;; retrieval threshold
-    ;;:lf 0.05                   ;; latency factor
     
+    ;;:lf 0.05                   ;; latency factor
+    :v nil
     :visual-num-finsts 20
     :visual-finst-span 20
     
@@ -244,10 +243,12 @@
     +visual>
         isa move-attention
         screen-pos =loc
+    !bind! =noise (noise =retrieval)
+    !output! (=retrieval =noise)
     +manual>
         isa move-cursor
         loc =loc
-        noise 0.03
+        noise =noise ;; 0.03
 )
 
 (p recall*failed

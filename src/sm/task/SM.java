@@ -6,9 +6,12 @@ import java.awt.Rectangle;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 import java.util.Vector;
+
+import actr.model.Chunk;
 import actr.model.Event;
 import actr.model.Symbol;
 import actr.task.Result;
@@ -191,6 +194,28 @@ public class SM extends Task {
 		
 	}
 	
+	@Override
+	public double bind(Iterator<String> it) {
+		try {
+			it.next();
+			String cmd = it.next();
+			if (cmd.equals("noise")) {
+				String name = it.next();
+				Chunk plane = getModel().getDeclarative().get(Symbol.get(name));
+				double activation = plane.getActivation();
+				double base = .0;
+				double scale = .1;
+				double noise = Math.min(base + scale * Math.exp(-activation) + numberOfObjects/200.0 , 0.1 );
+//				System.out.println("noise = " + noise);
+//				System.out.println("activation = " + activation);
+				return noise;
+			} else
+				return 0;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return 0;
+		}
+	}
 
 	@Override
 	public void clickMouse() {
