@@ -61,6 +61,7 @@ public class SM extends Task {
 	private Phase phase= Phase.scan;
 	private int trial = 0;
 	private List<VisualObject> visualObjects = new Vector<VisualObject>();
+	private List<VisualObject> visualObjectsInOrderOfClicking = new Vector<VisualObject>();
 	private int numberOfObjects = 0;
 	private int currentOrder;
 	private int currentDelayIndex;
@@ -126,16 +127,21 @@ public class SM extends Task {
 	}
 
 	private void scanPhase() {
+		phase =Phase.scan;
 		trial++;
 		if (trial > NUMBER_OF_TRIALS){
 			stopModel();	
 		}
-		if (visualObjects.size() > 0)
-			for (VisualObject v : visualObjects)
+//		if (visualObjects.size() > 0)
+//			for (VisualObject v : visualObjects)
+//				remove(v);
+//		visualObjects.clear();
+		if (visualObjectsInOrderOfClicking.size() > 0)
+			for (VisualObject v : visualObjectsInOrderOfClicking)
 				remove(v);
-		visualObjects.clear();
+		visualObjectsInOrderOfClicking.clear();
 		
-		phase =Phase.scan;
+		
 
 		numberOfObjects = random.nextInt(4)+2;
 	
@@ -178,19 +184,27 @@ public class SM extends Task {
 	}
 
 	private void recallPhase() {
-		currentOrder = 1;
 		phase = Phase.recall;
-		for (int i = 0; i < visualObjects.size(); i++) {
-			visualObjects.get(i).moveTo(new Point(100*(i+1), 750) );
+		currentOrder = 1;
+		
+//		if (visualObjects.size() > 0)
+//			for (VisualObject v : visualObjects)
+//				remove(v);
+		visualObjects.clear();
+		//visualObjects = visualObjectsInOrderOfClicking;
+		
+		for (int i = 0; i < visualObjectsInOrderOfClicking.size(); i++) {
+			visualObjectsInOrderOfClicking.get(i).moveTo(new Point(100*(i+1), 750) );
 		}
+//		for (VisualObject v : visualObjects)
+//			add(v);
 		repaint();
 		processDisplay();
-		processDisplayNoClear();
+		//processDisplayNoClear();
 		getModel().getDeclarative().get(Symbol.get("goal")).set(Symbol.get("isa"),
 				Symbol.get("recall"));
 		//System.out.println(getModel().getDeclarative().get(Symbol.get("goal")).toString());
-		repaint();
-		processDisplay();
+		
 		
 	}
 	
@@ -205,17 +219,17 @@ public class SM extends Task {
 				double activation = plane.getBaseLevel(); // getActivation();
 				double threshold = -0.5;
 
-				double base = .02;
-				double scale = .18;
-				double noise = base + scale * (activation >= threshold ? Math.exp(-activation + threshold) : 1);
+				double base = .01;
+				double scale = .08;
+				double noise = base + scale * (activation >= threshold ? Math.exp(-activation + threshold) : 0);
 
 				// double base = .0;
 				// double scale = .1;
 				// double noise = Math.min( Math.pow(NUMBER_OF_PLANES/2.0, 2) /
 				// 100.0 , 0.20 );
 
-				 System.out.println("noise = " + noise);
-				 System.out.println("activation = " + activation);
+//				 System.out.println("noise = " + noise);
+//				 System.out.println("activation = " + activation);
 
 				return noise;
 			} else
@@ -251,6 +265,14 @@ public class SM extends Task {
 				if (bounds.contains(mousePoint)) {
 					pickedObject = (VisualObject) component;
 					processDisplay();
+					return;
+				}
+			}
+			else if ((component instanceof VisualObject) && component.isVisible() && mouseY<700 && phase == Phase.scan){
+				VisualObject object = (VisualObject) component;
+				Rectangle bounds = component.getBounds();
+				if (bounds.contains(mousePoint)) {
+					visualObjectsInOrderOfClicking.add((VisualObject)component);
 					return;
 				}
 			}

@@ -3,7 +3,7 @@
 (sgp
     :esc t
     :emma t
-    :bll 0.5
+    :bll 0.75
     :ans 0.5
     :rt -0.5               ;; retrieval threshold
     
@@ -57,10 +57,15 @@
     ?visual>
         buffer empty
         state free
+    ?manual>
+        state free
 ==>
     +visual>
         isa move-attention
         screen-pos =visual-location
+    +manual>
+        isa move-cursor
+        loc =visual-location
 )
 
 (p scan*remember-object
@@ -71,6 +76,8 @@
         isa object
         screen-pos =pos
         value =value
+    ?manual>
+        state free
 ==>
     !output! (=value)
     +imaginal>
@@ -79,9 +86,12 @@
         location =pos
         id =id
     -imaginal>
+    +manual>
+        isa click-mouse
     =goal>
         isa scan
 )
+
 
 (p scan*no-more-objects->look-for-button
     =goal>
