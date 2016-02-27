@@ -18,6 +18,7 @@ import actr.task.Result;
 import actr.task.Task;
 import actr.task.TaskButton;
 import actr.task.TaskCross;
+import actr.task.TaskLine;
 import sm.task.VisualObject.Colour;
 import sm.task.VisualObject.Hieght;
 import sm.task.VisualObject.Pattern;
@@ -112,6 +113,8 @@ public class SM extends Task {
 			}
 		};
 		add(doneButton);
+		
+		add(new TaskLine(0, 700, 800, 3,Color.white));
 	}
 
 	@Override
